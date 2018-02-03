@@ -10,7 +10,7 @@
         <Button x:Name="ButtonOK" Content="OK" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75" Height="30" Click="ButtonOK_Click" Margin="0,0,250,18"/>
         <Button x:Name="ButtonCancel" Content="Anuluj" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75" Height="30" Click="ButtonCancel_Click" Margin="0,0,150,18" HorizontalContentAlignment="Center"/>
         <Button x:Name="ButtonApply" Content="Zastosuj" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75" Height="30" Click="ButtonApply_Click" Margin="0,0,50,18"/>
-        <ComboBox x:Name="ComboBoxCompaniesPresets" HorizontalAlignment="Left" Margin="72,70,0,0" VerticalAlignment="Top" Width="450" SelectionChanged="ComboBoxCompaniesPresets_SelectionChanged" SelectedIndex="0"/>
+        <ComboBox x:Name="ComboBoxCompanySettingsPresets" HorizontalAlignment="Left" Margin="72,70,0,0" VerticalAlignment="Top" Width="450" SelectionChanged="ComboBoxCompaniesPresets_SelectionChanged" SelectedIndex="0"/>
         <Label Content="Firmy" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Margin="72,31,0,0"/>
         <Label Content="Nazwa firmy" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Margin="72,126,0,0"/>
         <Label Content="NIP" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Margin="72,195,0,0"/>

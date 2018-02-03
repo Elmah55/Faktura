@@ -15,18 +15,17 @@ namespace Faktura
     public partial class MainWindow : Window
     {
         //Windows
-        private InvoiceSettingsWindow InvoiceSettingsWin;
-        private CompanySettingsWindow CompanySettingsWin;
+        public InvoiceSettingsWindow InvoiceSettingsWin { get; private set; }
+        public CompanySettingsWindow CompanySettingsWin { get; private set; }
+        private PDFGeneratorWindow PDFGeneratorWin;
 
         private ObservableCollection<GridInvoiceItem> InvoiceItems;
 
         public MainWindow()
         {
             InitializeComponent();
-            InvoiceItems = new ObservableCollection<GridInvoiceItem>();
-            InvoiceSettingsWin = new InvoiceSettingsWindow();
-            CompanySettingsWin = new CompanySettingsWindow();
 
+            InvoiceItems = new ObservableCollection<GridInvoiceItem>();
             DataGridInvoiceItems.ItemsSource = InvoiceItems;
             DataGridInvoiceItems.AutoGenerateColumns = false;
         }
@@ -127,28 +126,46 @@ namespace Faktura
 
         private void ButtonGenerateInvoice_Click(object sender, RoutedEventArgs e)
         {
-            UInt32 paymentDays = 0;
+            OpenPDFGeneratorWindow();
+        }
 
-            ParseFailReason reason = InputParser.ParseInvoice(TextBoxPaymentDays.Text, out paymentDays);
-
-            if ((0 != TextBoxInvoiceNumber.Text.Length) && (0 != InvoiceItems.Count) && (ParseFailReason.None == reason)
-                && (null != InvoiceItems) && (null != DatePickerIssueDate.SelectedDate))
+        private void OpenPDFGeneratorWindow()
+        {
+            if (null == PDFGeneratorWin)
             {
-                Invoice newInvoice = new Invoice((DateTime)DatePickerIssueDate.SelectedDate, paymentDays,
-                    TextBoxInvoiceNumber.Text, InvoiceItems.Cast<InvoiceItem>().ToList());
-
-                PDFMaker.GenerateInvoicePDF(newInvoice, (AppDomain.CurrentDomain.BaseDirectory + "\\faktura.pdf"));
+                PDFGeneratorWin = new PDFGeneratorWindow(this);
             }
+
+            PDFGeneratorWin.Show();
+        }
+        private void OpenCompanySettingsWindow()
+        {
+            if (null == CompanySettingsWin)
+            {
+                CompanySettingsWin = new CompanySettingsWindow();
+            }
+
+            CompanySettingsWin.Show();
+        }
+
+        private void OpenInvoiceSettingsWindow()
+        {
+            if (null == InvoiceSettingsWin)
+            {
+                InvoiceSettingsWin = new InvoiceSettingsWindow();
+            }
+
+            InvoiceSettingsWin.Show();
         }
 
         private void MenuItemSettingsInvoice_Click(object sender, RoutedEventArgs e)
         {
-            InvoiceSettingsWin.Show();
+            OpenInvoiceSettingsWindow();
         }
 
         private void MenuItemSettingsCompany_Click(object sender, RoutedEventArgs e)
         {
-            CompanySettingsWin.Show();
+            OpenCompanySettingsWindow();
         }
     }
 }

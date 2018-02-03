@@ -5,6 +5,7 @@ using Faktura.Utils;
 using Faktura.Files;
 using System.Windows.Controls;
 using System.ComponentModel;
+using System.Linq;
 
 namespace Faktura.GUI
 {
@@ -56,6 +57,7 @@ namespace Faktura.GUI
             InitializeComponent();
             Serializer = new ObjectSerializer();
             InitializePresets();
+            InitializeCurrentCompany();
             InitializeControlsValues();
         }
 
@@ -107,8 +109,15 @@ namespace Faktura.GUI
                         (null == CompanySettingsPresets[index]) ? ((index + 1).ToString()) :
                         ((index + 1).ToString() + " " + CompanySettingsPresets[index].CompanyName);
 
-                    ComboBoxCompaniesPresets.Items.Add(ComboBoxItemName);
+                    ComboBoxCompanySettingsPresets.Items.Add(ComboBoxItemName);
                 }
+
+                //Initial index the combox selection is set to in case loading 
+                //.dat file with saved control values failed
+                const int initialIndex = 0;
+
+                ComboBoxCompanySettingsPresets.SelectedIndex = (null == ControlsState) ?
+               initialIndex : ControlsState.ComboBoxCompanySettingsPresetsIndex;
             }
         }
 
@@ -164,11 +173,6 @@ namespace Faktura.GUI
             ControlsState = LoadControlsState();
             UpdateCompanySettingsControlsValues(false);
             InitializePresetsComboBox();
-
-            if (null != ControlsState)
-            {
-                ComboBoxCompaniesPresets.SelectedIndex = ControlsState.ComboBoxCompaniesPresetIndex;
-            }
         }
 
         /// <summary>
@@ -180,7 +184,7 @@ namespace Faktura.GUI
             if (index >= 0 && index < CompanyPresetsNumber
                 && null != CompanySettingsPresets && null != CompanySettingsPresets[index])
             {
-                ComboBoxCompaniesPresets.Items[index] =
+                ComboBoxCompanySettingsPresets.Items[index] =
                     (index + 1).ToString() + " " + CompanySettingsPresets[index].CompanyName;
             }
         }
@@ -226,12 +230,12 @@ namespace Faktura.GUI
             bool result = false;
             CompanySettings generatedCompanySettings = GenerateSettings();
 
-            if (null != generatedCompanySettings && (-1) != ComboBoxCompaniesPresets.SelectedIndex)
+            if (null != generatedCompanySettings && (-1) != ComboBoxCompanySettingsPresets.SelectedIndex)
             {
-                CompanySettingsPresets[ComboBoxCompaniesPresets.SelectedIndex] = generatedCompanySettings;
+                CompanySettingsPresets[ComboBoxCompanySettingsPresets.SelectedIndex] = generatedCompanySettings;
                 CurrentCompany = generatedCompanySettings;
                 UpdateCompanySettingsControlsValues(false);
-                UpdatePresetsComboBox(ComboBoxCompaniesPresets.SelectedIndex);
+                UpdatePresetsComboBox(ComboBoxCompanySettingsPresets.SelectedIndex);
                 result = true;
             }
 
@@ -249,7 +253,7 @@ namespace Faktura.GUI
             if (null != CompanySettingsPresets && null != Serializer)
             {
                 result = Serializer.SerializeObject(CompanySettingsPresets, CompanySettingsPresetsSerializationPath);
-                GUIInfoHelper.DisplaySerializationInfo(result);
+                GUIInfoHelper.DisplaySettingsSerializationInfo(result);
             }
 
             return result;
@@ -266,7 +270,7 @@ namespace Faktura.GUI
             if (null != Serializer)
             {
                 ControlState state = new ControlState();
-                state.ComboBoxCompaniesPresetIndex = ComboBoxCompaniesPresets.SelectedIndex;
+                state.ComboBoxCompanySettingsPresetsIndex = ComboBoxCompanySettingsPresets.SelectedIndex;
 
                 result = Serializer.SerializeObject(state, ControlsStateSerializationPath);
             }
@@ -319,7 +323,7 @@ namespace Faktura.GUI
 
         private void ComboBoxCompaniesPresets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            int selectedIndex = ComboBoxCompaniesPresets.SelectedIndex;
+            int selectedIndex = ComboBoxCompanySettingsPresets.SelectedIndex;
 
             if (selectedIndex >= 0 && selectedIndex < CompanyPresetsNumber)
             {
@@ -332,11 +336,26 @@ namespace Faktura.GUI
         /// Sets current company settings from company settings presets based on
         /// given index. Does nothing is index is invalid.
         /// </summary>
-        private void SetCurrentCompany(int presetsIndex)
+        private bool SetCurrentCompany(int presetsIndex)
         {
+            bool result = false;
+
             if (presetsIndex >= 0 && presetsIndex < CompanyPresetsNumber && null != CompanySettingsPresets)
             {
                 CurrentCompany = CompanySettingsPresets[presetsIndex];
+                result = true;
+            }
+
+            return result;
+        }
+
+        private void InitializeCurrentCompany()
+        {
+            //If current company cannot be set (ie. company settings presets combo box's value
+            //could not be loaded) try to set first preset that is not null
+            if (!SetCurrentCompany(ComboBoxCompanySettingsPresets.SelectedIndex))
+            {
+                CurrentCompany = CompanySettingsPresets.FirstOrDefault(x => x != null);
             }
         }
 
@@ -347,7 +366,7 @@ namespace Faktura.GUI
         [Serializable]
         class ControlState
         {
-            public int ComboBoxCompaniesPresetIndex { get; set; }
+            public int ComboBoxCompanySettingsPresetsIndex { get; set; }
         }
     }
 }

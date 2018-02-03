@@ -41,7 +41,7 @@ namespace Faktura.Utils
         /// </summary>
         /// <param name="result">If true displays serialization successful message.
         /// If false displays serialization failed message</param>
-        public static void DisplaySerializationInfo(bool result)
+        public static void DisplaySettingsSerializationInfo(bool result)
         {
             string errorMsg = result ? "Zapisano ustawienia" : "Zapisywanie nie powiodło się";
 

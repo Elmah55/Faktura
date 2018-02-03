@@ -26,7 +26,7 @@ namespace Faktura.GUI
         //Serialization
         private ISerializer SettingsSerializer;
         private const string InvoiceSettingsSerializationPath = @"data\invoiceSettings\settings.dat";
-        private const string ControlsStateSerializationPath = @"data\invoiceSettings\controlsState.dat";
+        private const string ControlsStateSerializationPath = @"data\invoiceSettings\controls_state.dat";
 
         public InvoiceSettingsWindow()
         {
@@ -273,7 +273,7 @@ namespace Faktura.GUI
             if (null != InvSettings && null != SettingsSerializer)
             {
                 result = SettingsSerializer.SerializeObject(InvSettings, InvoiceSettingsSerializationPath);
-                GUIInfoHelper.DisplaySerializationInfo(result);
+                GUIInfoHelper.DisplaySettingsSerializationInfo(result);
             }
 
             return result;

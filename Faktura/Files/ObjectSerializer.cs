@@ -75,6 +75,7 @@ namespace Faktura.Files
         private bool OpenFileStream(string filePath, FileMode mode)
         {
             bool result = false;
+            FileStream = null; //Reset variable to null in case it is still poiting to old stream
 
             if (null != filePath)
             {
