@@ -53,5 +53,4 @@
         <Button x:Name="ButtonGenerateInvoice" Content="Generuj fakturę" HorizontalAlignment="Left" Margin="1180,934,0,0" VerticalAlignment="Top" Width="630" FontSize="18" Height="50" Click="ButtonGenerateInvoice_Click"/>
         <TextBox x:Name="TextBoxPaymentDays" HorizontalAlignment="Left" Height="26" Margin="110,960,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="170"/>
     </Grid>
-
 </Window>

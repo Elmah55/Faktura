@@ -26,7 +26,7 @@ namespace Faktura.Invoices
 
                 pdfDocument.OpenDocument();
 
-                AddInvoiceHeader(inv, pdfDocument);
+                AddInvoiceHeader(company, inv, pdfDocument);
 
                 pdfDocument.CloseDocument();
                 writer.Close();

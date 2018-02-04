@@ -14,17 +14,14 @@ namespace Faktura
     /// </summary>
     public partial class MainWindow : Window
     {
-        //Windows
-        public InvoiceSettingsWindow InvoiceSettingsWin { get; private set; }
-        public CompanySettingsWindow CompanySettingsWin { get; private set; }
-        private PDFGeneratorWindow PDFGeneratorWin;
-
+        private WindowManager WinManager;
         private ObservableCollection<GridInvoiceItem> InvoiceItems;
 
         public MainWindow()
         {
             InitializeComponent();
 
+            WinManager = new WindowManager();
             InvoiceItems = new ObservableCollection<GridInvoiceItem>();
             DataGridInvoiceItems.ItemsSource = InvoiceItems;
             DataGridInvoiceItems.AutoGenerateColumns = false;
@@ -126,36 +123,23 @@ namespace Faktura
 
         private void ButtonGenerateInvoice_Click(object sender, RoutedEventArgs e)
         {
-            OpenPDFGeneratorWindow();
+            //Generate PDF file
         }
 
-        private void OpenPDFGeneratorWindow()
-        {
-            if (null == PDFGeneratorWin)
-            {
-                PDFGeneratorWin = new PDFGeneratorWindow(this);
-            }
-
-            PDFGeneratorWin.Show();
-        }
         private void OpenCompanySettingsWindow()
         {
-            if (null == CompanySettingsWin)
+            if (null != WinManager)
             {
-                CompanySettingsWin = new CompanySettingsWindow();
+                WinManager.CompanySettingsWin.Show();
             }
-
-            CompanySettingsWin.Show();
         }
 
         private void OpenInvoiceSettingsWindow()
         {
-            if (null == InvoiceSettingsWin)
+            if (null != WinManager)
             {
-                InvoiceSettingsWin = new InvoiceSettingsWindow();
+                WinManager.InvoiceSettingsWin.Show();
             }
-
-            InvoiceSettingsWin.Show();
         }
 
         private void MenuItemSettingsInvoice_Click(object sender, RoutedEventArgs e)
