@@ -13,8 +13,10 @@ namespace Faktura.Invoices
     {
         //Consts
 
-        private const Font.FontFamily GeneralFont = Font.FontFamily.TIMES_ROMAN;
-        private const UInt32 GeneralFontSize = 10; //Default font used for most text on invoice pdf
+        private const Font.FontFamily DefaultFont = Font.FontFamily.TIMES_ROMAN;
+
+        private const UInt32 DefualtFontSize = 14; //Default font used for most text on invoice pdf
+        private const UInt32 IssuerInfoFontSize = 10;
 
         public Document GenerateInvoicePDF(CompanySettings company, Invoice inv, string pdfFilePath)
         {
@@ -40,7 +42,7 @@ namespace Faktura.Invoices
             }
         }
 
-        //Header related methods
+        //Invoice header related methods
         //-------------------------------------------------------------------
 
         /// <summary>
@@ -50,8 +52,8 @@ namespace Faktura.Invoices
         {
             if (null != company && null != inv && null != doc)
             {
-
-
+                AddInvoiceNumber(inv, doc);
+                AddIssuerInfo(company, doc);
             }
         }
 
@@ -59,23 +61,44 @@ namespace Faktura.Invoices
         {
             if (null != inv && null != doc)
             {
-                string headerText = "Faktura nr. " + inv.InvoiceNumber;
-                Paragraph header = new Paragraph(headerText);
-                header.Font = new Font(GeneralFont);
-                header.Alignment = Element.ALIGN_CENTER;
-                doc.Add(header);
+                string headerText = "Faktura VAT nr. " + inv.InvoiceNumber;
+                Font invoiceNumberFont = new Font(DefaultFont, DefualtFontSize);
+                Paragraph invoiceNumber = new Paragraph(headerText, invoiceNumberFont);
+                invoiceNumber.Alignment = Element.ALIGN_CENTER;
+                doc.Add(invoiceNumber);
             }
         }
 
-        private void AddIssuerInfo(Invoice inv, Document doc)
+        private void AddIssuerInfo(CompanySettings company, Document doc)
         {
-            if (null != inv && null != doc)
+            if (null != company && null != doc)
             {
-                //string issuerInfoText = "Wystawiający:\n"
-                //    + inv
-            }
+                string issuerInfoText = "Wystawiający:\n"
+                  + company.CompanyName + "\n"
+                  + company.Street + " / " + company.HouseNumber + "\n"
+                  + company.PostalCode.ToString().Substring(0, 2) + "-"
+                  + company.PostalCode.ToString().Substring(2, 3)
+                  + " " + company.City;
 
-            //-------------------------------------------------------------------
+                Font issuerInfoFont = new Font(DefaultFont, IssuerInfoFontSize);
+                Paragraph issuerInfo = new Paragraph(issuerInfoText, issuerInfoFont);
+                issuerInfo.Alignment = Element.ALIGN_RIGHT;
+                doc.Add(issuerInfo);
+            }
+        }
+
+        //-------------------------------------------------------------------
+
+        /// <summary>
+        /// Adds table with invoice items to the invoice pdf document
+        /// </summary>
+        private void AddInvoiceItems(Invoice inv, Document doc)
+        {
+            if (null != inv && null != doc && 0 != inv.Items.Count)
+            {
+                //Table with names of 
+                //const string[] itemsTableColumns
+            }
         }
     }
 }
