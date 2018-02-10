@@ -71,7 +71,7 @@
     </Compile>
     <Compile Include="GUI\WindowManager.cs" />
     <Compile Include="Invoices\Invoice.cs" />
-    <Compile Include="Invoices\PDFMaker.cs" />
+    <Compile Include="Invoices\InvoicePDFMaker.cs" />
     <Compile Include="Utils\GUIInfoHelper.cs" />
     <Compile Include="Utils\InputParser.cs" />
     <Compile Include="Invoices\InvoiceSettings.cs" />
@@ -91,7 +91,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Invoices\GridInvoiceItem.cs" />
     <Compile Include="Invoices\InvoiceItem.cs" />
     <Compile Include="GUI\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

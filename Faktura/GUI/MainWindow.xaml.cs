@@ -4,8 +4,9 @@ using System.Windows;
 using System.Windows.Input;
 using Faktura.Invoices;
 using Faktura.Utils;
-using System.Linq;
 using Faktura.GUI;
+using Faktura.Companies;
+using System.Collections.Generic;
 
 namespace Faktura
 {
@@ -15,14 +16,17 @@ namespace Faktura
     public partial class MainWindow : Window
     {
         private WindowManager WinManager;
-        private ObservableCollection<GridInvoiceItem> InvoiceItems;
+        private ObservableCollection<InvoiceItem> InvoiceItems;
+        private InvoicePDFMaker InvoicePDF;
 
         public MainWindow()
         {
             InitializeComponent();
 
             WinManager = new WindowManager();
-            InvoiceItems = new ObservableCollection<GridInvoiceItem>();
+            InvoiceItems = new ObservableCollection<InvoiceItem>();
+            InvoicePDF = new InvoicePDFMaker();
+
             DataGridInvoiceItems.ItemsSource = InvoiceItems;
             DataGridInvoiceItems.AutoGenerateColumns = false;
         }
@@ -58,25 +62,25 @@ namespace Faktura
         {
             if ((null != itemName) && (null != comment))
             {
-                InvoiceItem newInvoiceItem = new InvoiceItem(itemName, vatRate, nettoPrice, comment);
-                bool isAlreadyInList = false;
+                InvoiceItem newInvoiceItem = new InvoiceItem(itemName, vatRate, nettoPrice, comment, quantity);
+                //Variable indicating whether invoice item equal to created
+                // invoice item is alread in item's collection
+                bool isAlreadyInCollection = false;
 
                 //Check whether item with same properties already exsists in list of invoice items and increase its count
-                foreach (GridInvoiceItem invoiceItem in InvoiceItems)
+                foreach (InvoiceItem invoiceItem in InvoiceItems)
                 {
                     if (invoiceItem.Equals(newInvoiceItem))
                     {
                         invoiceItem.Count += quantity;
-                        isAlreadyInList = true;
+                        isAlreadyInCollection = true;
                         break;
                     }
                 }
 
-                if (!isAlreadyInList)
+                if (!isAlreadyInCollection)
                 {
-                    GridInvoiceItem newGridItem = new GridInvoiceItem(newInvoiceItem);
-                    newGridItem.Count = quantity;
-                    InvoiceItems.Add(newGridItem);
+                    InvoiceItems.Add(newInvoiceItem);
                 }
             }
         }
@@ -123,7 +127,10 @@ namespace Faktura
 
         private void ButtonGenerateInvoice_Click(object sender, RoutedEventArgs e)
         {
-            //Generate PDF file
+            CompanySettings cmpsts = new CompanySettings("FIRMA", 55555555, 4444444, "Wiertnicza 2", 6, "Szczecin", 32421);
+            List<InvoiceItem> invitems = new List<InvoiceItem>();
+            Invoice inv = new Invoice(DateTime.Now, 3, "K/755/33", invitems);
+            InvoicePDF.GenerateInvoicePDF(cmpsts, inv, "test.pdf");
         }
 
         private void OpenCompanySettingsWindow()
