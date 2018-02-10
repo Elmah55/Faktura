@@ -11,8 +11,6 @@ namespace Faktura.Files
     {
         private IFormatter BinaryFormatter;
         private Stream FileStream;
-        //Indicates whether object serializer has access permision to write and read
-        private bool HasAccessPermisions;
 
         public ObjectSerializer()
         {
