@@ -4,7 +4,20 @@ namespace Faktura
 {
     class InvoiceItem
     {
-        public string ItemName { get; private set; }
+        //This is table containing name of this class' fields
+        private static string[] _FieldsName = {"Nazwa","Stawka VAT","Cena Netto",
+            "Cena Brutto","Wartosc Netto","Ilosc","Komentarz"};
+        public static string[] FieldsName
+        {
+            get
+            {
+                return _FieldsName;
+            }
+        }
+
+        //Fields
+
+        public string Name { get; private set; }
         public UInt32 VATRate { get; private set; }
 
         public double NettoPrice { get; private set; }
@@ -12,7 +25,7 @@ namespace Faktura
         {
             get
             {
-                return NettoPrice * VATRate;
+                return NettoPrice + (NettoPrice * VATRate);
             }
         }
         public double NettoValue
@@ -28,7 +41,7 @@ namespace Faktura
 
         public InvoiceItem(string itemName, UInt32 VATRate, double nettoPrice, string comment, UInt32 count)
         {
-            this.ItemName = itemName;
+            this.Name = itemName;
             this.VATRate = VATRate;
             this.NettoPrice = nettoPrice;
             this.Comment = comment;
@@ -37,7 +50,7 @@ namespace Faktura
 
         public override int GetHashCode()
         {
-            return ((int)(ItemName.ToUpper().GetHashCode() + VATRate + NettoPrice));
+            return ((int)(Name.ToUpper().GetHashCode() + VATRate + NettoPrice));
         }
 
         public override bool Equals(object obj)
@@ -49,7 +62,7 @@ namespace Faktura
             {
                 result = (this.BruttoPrice == other.BruttoPrice)
                     && (0 == string.Compare(this.Comment, other.Comment, true))
-                    && (0 == string.Compare(this.ItemName, other.ItemName, true))
+                    && (0 == string.Compare(this.Name, other.Name, true))
                     && (this.NettoPrice == other.NettoPrice)
                     && (this.VATRate == other.VATRate);
             }
