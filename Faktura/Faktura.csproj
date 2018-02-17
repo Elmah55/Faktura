@@ -72,6 +72,7 @@
     <Compile Include="GUI\WindowManager.cs" />
     <Compile Include="Invoices\Invoice.cs" />
     <Compile Include="Invoices\InvoicePDFMaker.cs" />
+    <Compile Include="Invoices\PDFPageEvent.cs" />
     <Compile Include="Utils\GUIInfoHelper.cs" />
     <Compile Include="Utils\InputParser.cs" />
     <Compile Include="Invoices\InvoiceSettings.cs" />
