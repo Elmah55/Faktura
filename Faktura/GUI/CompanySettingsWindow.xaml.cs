@@ -41,13 +41,13 @@ namespace Faktura.GUI
         //company settings. Index is null if specific
         //preset has not been set yet or failed loading
         //from file
-        private CompanySettings[] CompanySettingsPresets;
+        private Company[] CompanySettingsPresets;
 
         //This is Company class instance coresponding to selected
         //company settings from settings presets. Is null if currently
         //seleceted preset is new and has not been saved yet or
         //loading preset from file failed
-        public CompanySettings CurrentCompany { get; private set; }
+        public Company CurrentCompany { get; private set; }
 
         //This is serializer for saving company settings to .dat file
         private ISerializer Serializer;
@@ -65,14 +65,14 @@ namespace Faktura.GUI
         /// Loads saved company settings from file. Sets preset array to null
         /// if loading .dat file failed
         /// </summary>
-        private CompanySettings[] LoadPresets() //TODO: Add loading from file
+        private Company[] LoadPresets() //TODO: Add loading from file
         {
-            CompanySettings[] loadedPresets = null;
+            Company[] loadedPresets = null;
 
             if (null != Serializer)
             {
                 loadedPresets =
-                    Serializer.DeserializeObject(CompanySettingsPresetsSerializationPath) as CompanySettings[];
+                    Serializer.DeserializeObject(CompanySettingsPresetsSerializationPath) as Company[];
             }
 
             return loadedPresets;
@@ -80,7 +80,7 @@ namespace Faktura.GUI
 
         private void InitializePresets()
         {
-            CompanySettings[] loadedPresets = LoadPresets();
+            Company[] loadedPresets = LoadPresets();
 
             if (null != loadedPresets && CompanyPresetsNumber == loadedPresets.Length)
             {
@@ -88,7 +88,7 @@ namespace Faktura.GUI
             }
             else //Loading failed, create new company settings presets
             {
-                CompanySettingsPresets = new CompanySettings[CompanyPresetsNumber];
+                CompanySettingsPresets = new Company[CompanyPresetsNumber];
             }
         }
 
@@ -196,9 +196,9 @@ namespace Faktura.GUI
         /// </summary>
         /// <returns>True if user passed correct values and CompanySettings class instance was created.
         /// False otherwise</returns>
-        private CompanySettings GenerateSettings()
+        private Company GenerateSettings()
         {
-            CompanySettings newSettings = null;
+            Company newSettings = null;
 
             UInt64 REGON;
             UInt64 NIP;
@@ -214,7 +214,7 @@ namespace Faktura.GUI
 
             if (ParseFailReason.None == reason)
             {
-                newSettings = new CompanySettings(TextBoxCompanyName.Text, NIP, REGON, TextBoxAddressStreet.Text,
+                newSettings = new Company(TextBoxCompanyName.Text, NIP, REGON, TextBoxAddressStreet.Text,
                    houseNumber, TextBoxAddressCity.Text, postalCode);
             }
             else
@@ -228,7 +228,7 @@ namespace Faktura.GUI
         private bool UpdateSettings()
         {
             bool result = false;
-            CompanySettings generatedCompanySettings = GenerateSettings();
+            Company generatedCompanySettings = GenerateSettings();
 
             if (null != generatedCompanySettings && (-1) != ComboBoxCompanySettingsPresets.SelectedIndex)
             {

@@ -3,27 +3,8 @@
 namespace Faktura.Companies
 {
     [Serializable]
-    public class CompanySettings
+    public class Company
     {
-        public CompanySettings(string companyName, UInt64 nip, UInt64 regon, string street, UInt16 houseNumber,
-            string city, UInt32 postalCode)
-        {
-            if (null != street && null != companyName && null != city)
-            {
-                this.CompanyName = companyName;
-                this.NIP = nip;
-                this.REGON = regon;
-                this.Street = street;
-                this.HouseNumber = houseNumber;
-                this.City = city;
-                this.PostalCode = postalCode;
-            }
-            else
-            {
-                throw new ArgumentNullException();
-            }
-        }
-
         private string _CompanyName;
         public string CompanyName
         {
@@ -120,6 +101,25 @@ namespace Faktura.Companies
             set
             {
                 _PostalCode = value;
+            }
+        }
+
+        public Company(string companyName, UInt64 nip, UInt64 regon, string street, UInt16 houseNumber,
+        string city, UInt32 postalCode)
+        {
+            if (null != street && null != companyName && null != city)
+            {
+                this.CompanyName = companyName;
+                this.NIP = nip;
+                this.REGON = regon;
+                this.Street = street;
+                this.HouseNumber = houseNumber;
+                this.City = city;
+                this.PostalCode = postalCode;
+            }
+            else
+            {
+                throw new ArgumentNullException();
             }
         }
     }
