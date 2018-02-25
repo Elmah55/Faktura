@@ -3,8 +3,8 @@ using System.IO;
 using iTextSharp.text.pdf;
 using iTextSharp.text;
 using Faktura.Companies;
-using System.Collections.Generic;
 using iTextSharp.text.pdf.draw;
+using System.Windows;
 
 namespace Faktura.Invoices
 {
@@ -30,12 +30,14 @@ namespace Faktura.Invoices
         //Font size for elements in invoice item's table
         private const UInt32 ItemsTableFontSize = 10;
         private const UInt32 FooterFontSize = 5;
-        private const UInt32 SignatureTemplateFontSize = 1;
+        private const UInt32 SignatureTemplateFontSize = 7;
+        private const UInt32 SummaryInfoFontSize = 10;
         //-------------------------------------------------------------------
 
         //New lines spacing
         //-------------------------------------------------------------------
         private const UInt32 NewLinesAfterHeader = 3;
+        private const UInt32 NewLinesBeforeSummaryInfo = 3;
         private const UInt32 NewLinesBeforeSignatureTemplate = 2;
         //Lines separating signature's template text and designated place for signature
         private const UInt32 NewLinesAfterSignatureStr = 3;
@@ -55,15 +57,17 @@ namespace Faktura.Invoices
         //-------------------------------------------------------------------
         private PDFPageEvent PageEventHelper;
 
-        //This is queue for storing content posistion for wirter
-        //so that page count footer can be added after writer has
-        //reached and of document and total number of pdf document pages
-        //is known
-        private Queue<PdfContentByte> PageCountFooterContents;
-
         //Invoice item's table related fields
         private int TableColumsCount;
         private float[] TableColumnsWidth;
+        private PdfPTable InvoiceItemsTable;
+
+        //Pdf document fields
+
+        //Total number of all pages in pdf document.
+        //This fields is calculated by incrementing
+        //it at every page end event
+        private UInt32 DocumentPagesCount;
 
         //-------------------------------------------------------------------
         #endregion
@@ -71,8 +75,6 @@ namespace Faktura.Invoices
         public InvoicePDFMaker()
         {
             this.PageEventHelper = new PDFPageEvent();
-            this.PageCountFooterContents = new Queue<PdfContentByte>();
-
             this.TableColumsCount = InvoiceItem.FieldsName.Length + 1; //One column for item number
 
             //Init columns width array
@@ -87,11 +89,12 @@ namespace Faktura.Invoices
             TableColumnsWidth[7] = 0.16f; //Comment
         }
 
-        public void GenerateInvoicePDF(CompanySettings company, Invoice inv, string pdfFilePath)
+        public void GenerateInvoicePDF(Company company, Invoice inv, string pdfFilePath)
         {
             if (null != company && null != inv && null != pdfFilePath)
             {
                 FileStream fStream = CreatePdfFile(pdfFilePath);
+                DocumentPagesCount = 1;
 
                 if (null != fStream) //Pdf file created successfully
                 {
@@ -125,17 +128,22 @@ namespace Faktura.Invoices
             if (null != writer && null != PageEventHelper)
             {
                 writer.PageEvent = PageEventHelper;
-                PageEventHelper.EndPage += AddPageCountFootersContents;
+                PageEventHelper.EndPage += HandlePageEnd;
+                PageEventHelper.StartPage += HandlePageStart;
             }
         }
 
-        private void AddPageCountFootersContents(Document document, PdfWriter writer)
+        private void HandlePageStart(Document document, PdfWriter writer)
         {
-            if (null != writer && null != PageCountFooterContents)
-            {
-                PdfContentByte content = writer.DirectContent.Duplicate;
-                PageCountFooterContents.Enqueue(content);
-            }
+            //if (0 != document.PageNumber && null != InvoiceItemsTable)
+            //{
+            //    AddItemsTableColumnsHeaders(InvoiceItemsTable);
+            //} TODO Add column headers on every page with invoice item's table
+        }
+
+        private void HandlePageEnd(Document document, PdfWriter writer)
+        {
+            ++DocumentPagesCount;
         }
 
         /// <summary>
@@ -155,19 +163,22 @@ namespace Faktura.Invoices
                 catch (Exception)
                 {
                     fStream = null;
+                    MessageBox.Show("Nie można utworzyć dokumentu pdf. Spróbój zamknąć dokument jeśli jest otwarty."
+                        , "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
 
             return fStream;
         }
 
-        private void FillDocument(CompanySettings company, Invoice inv, Document doc, PdfWriter writer)
+        private void FillDocument(Company company, Invoice inv, Document doc, PdfWriter writer)
         {
             if (null != company && null != inv && null != doc && null != writer && doc.IsOpen())
             {
                 AddInvoiceHeader(company, inv, doc);
                 AddNewLines(NewLinesAfterHeader, doc);
                 AddInvoiceItems(inv, doc);
+                AddNewLines(NewLinesBeforeSummaryInfo, doc);
                 AddSummaryInfo(inv, doc);
                 AddNewLines(NewLinesBeforeSignatureTemplate, doc);
                 AddSignatureTemplates(doc);
@@ -182,7 +193,7 @@ namespace Faktura.Invoices
         /// <summary>
         /// Adds invoice header to pdf document
         /// </summary>
-        private void AddInvoiceHeader(CompanySettings company, Invoice inv, Document doc)
+        private void AddInvoiceHeader(Company company, Invoice inv, Document doc)
         {
             if (null != company && null != inv && null != doc)
             {
@@ -203,7 +214,7 @@ namespace Faktura.Invoices
             }
         }
 
-        private void AddIssuerInfo(CompanySettings company, Document doc)
+        private void AddIssuerInfo(Company company, Document doc)
         {
             if (null != company && null != doc)
             {
@@ -238,37 +249,45 @@ namespace Faktura.Invoices
         {
             if (null != inv && null != doc && 0 != inv.Items.Count)
             {
-                PdfPTable table = new PdfPTable(TableColumsCount);
-                Font tableElementsFont = new Font(DefaultFontFamily, ItemsTableFontSize);
+                InitInvoiceItemsTable();
+                AddItemsToTable(inv, InvoiceItemsTable);
 
-                InitItemsTable(table, tableElementsFont);
-                AddItemsToTable(inv, table, tableElementsFont);
-
-                doc.Add(table);
-            }
-        }
-
-        private void InitItemsTable(PdfPTable table, Font tableElementsFont)
-        {
-            if (null != table && null != tableElementsFont)
-            {
-                table.SetTotalWidth(TableColumnsWidth);
-
-                //Add columns names
-                table.AddCell(new PdfPCell(new Phrase(ItemNumberColumnName, tableElementsFont)));
-
-                foreach (string columnName in InvoiceItem.FieldsName)
+                if (null != InvoiceItemsTable)
                 {
-                    table.AddCell(new PdfPCell(new Phrase(columnName, tableElementsFont)));
+                    doc.Add(InvoiceItemsTable);
                 }
             }
         }
 
-        private void AddItemsToTable(Invoice inv, PdfPTable table, Font tableElementsFont)
+        private void InitInvoiceItemsTable()
         {
-            if (null != inv && null != table && null != tableElementsFont)
+            InvoiceItemsTable = new PdfPTable(TableColumnsWidth);
+            InvoiceItemsTable.SetTotalWidth(TableColumnsWidth);
+            AddItemsTableColumnsHeaders(InvoiceItemsTable);
+        }
+
+        private void AddItemsTableColumnsHeaders(PdfPTable table)
+        {
+            if (null != table)
+            {
+                Font tableColumnsFont = new Font(DefaultFontFamily, ItemsTableFontSize);
+
+                //Add columns names
+                table.AddCell(new PdfPCell(new Phrase(ItemNumberColumnName, tableColumnsFont)));
+
+                foreach (string columnName in InvoiceItem.FieldsName)
+                {
+                    table.AddCell(new PdfPCell(new Phrase(columnName, tableColumnsFont)));
+                }
+            }
+        }
+
+        private void AddItemsToTable(Invoice inv, PdfPTable table)
+        {
+            if (null != inv && null != table)
             {
                 UInt32 itemNumber = 1;
+                Font tableElementsFont = new Font(DefaultFontFamily, ItemsTableFontSize);
 
                 foreach (InvoiceItem item in inv.Items)
                 {
@@ -300,23 +319,24 @@ namespace Faktura.Invoices
         /// </summary>
         private void AddPageCountFooters(Document doc, PdfWriter writer)
         {
-            if (null != doc && null != writer && null != PageCountFooterContents)
+            if (null != doc && null != writer)
             {
                 //Coordinates for pages count footer
-                const int pageCountFooterX = 300;
+                const int pageCountFooterX = 550;
                 const int PageCountFooterY = 20;
 
-                int totalPagesCount = writer.PageNumber; //Amount of all pages of pdf document
                 UInt32 currentPageNumber = 1;
+                Font pagesCountFont = new Font(DefaultFontFamily, FooterFontSize);
+                writer.ResetPageCount();
+                writer.DirectContentUnder.Reset();
 
-                while (0 != PageCountFooterContents.Count)
+                for (currentPageNumber = 1; currentPageNumber < DocumentPagesCount; currentPageNumber++)
                 {
-                    string pagesCountStr = "Strona " + currentPageNumber + " z " + totalPagesCount;
+                    string pagesCountStr = "Strona " + currentPageNumber + " z " + DocumentPagesCount;
                     Phrase pagesCountPhrase = new Phrase(pagesCountStr);
-                    Font pagesCountFont = new Font(DefaultFontFamily, FooterFontSize);
                     pagesCountPhrase.Font = pagesCountFont;
 
-                    PdfContentByte content = PageCountFooterContents.Dequeue();
+                    PdfContentByte content = writer.DirectContentUnder;
                     ColumnText.ShowTextAligned(content, Element.ALIGN_RIGHT,
                     pagesCountPhrase, pageCountFooterX, PageCountFooterY, 0);
 
@@ -329,30 +349,23 @@ namespace Faktura.Invoices
         {
             if (null != doc && null != inv)
             {
-                Font summaryInfoFont = new Font(DefaultFontFamily, DefualtFontSize);
+                string totalBruttoPriceStr = "Razem brutto: " + inv.BruttoValue + " " + inv.CurrencyType + "\n";
+                string totalNettoPriceStr = "Razem netto: " + inv.NettoValue + " " + inv.CurrencyType + "\n";
+                string paymentAmountStr = "Do zaplaty razem: " + inv.BruttoValue + " " + inv.CurrencyType + "\n";
+                string invoiceCommentsStr = "Uwagi: " + inv.Comment + "\n";
+                string bankAccountNumberStr = "Numer konta bankowego: " + "\n"; //TODO Add account number to company's class
 
-                string totalBruttoPriceStr = "Razem brutto: " + inv.BruttoValue;
-                Paragraph totalBruttoPrice = new Paragraph(totalBruttoPriceStr, summaryInfoFont);
-                totalBruttoPrice.Alignment = Element.ALIGN_LEFT;
+                Font summaryInfoFont = new Font(DefaultFontFamily, SummaryInfoFontSize);
+                Paragraph summaryInfo = new Paragraph();
+                summaryInfo.Font = summaryInfoFont;
+                summaryInfo.Alignment = Element.ALIGN_LEFT;
 
-                string totalNettoPriceStr = "Razem netto: " + inv.NettoValue;
-                Paragraph totalNettoPrice = new Paragraph(totalNettoPriceStr, summaryInfoFont);
-                totalNettoPrice.Alignment = Element.ALIGN_LEFT;
+                summaryInfo.Add(totalBruttoPriceStr);
+                summaryInfo.Add(totalNettoPriceStr);
+                summaryInfo.Add(paymentAmountStr);
+                summaryInfo.Add(invoiceCommentsStr);
 
-                string paymentAmountStr = "Do zapłaty: " + inv.BruttoValue;
-                Paragraph paymentAmount = new Paragraph(paymentAmountStr, summaryInfoFont);
-                paymentAmount.Alignment = Element.ALIGN_LEFT;
-
-                string invoiceCommentsStr = "Uwagi: " + inv.Comment;
-                Paragraph invoiceComments = new Paragraph(invoiceCommentsStr, summaryInfoFont);
-                invoiceComments.Alignment = Element.ALIGN_LEFT;
-
-                string bankAccountNumberStr = "Numer konta bankowego: "; //TODO Add account number to company's class
-
-                doc.Add(totalBruttoPrice);
-                doc.Add(totalNettoPrice);
-                doc.Add(paymentAmount);
-                doc.Add(invoiceComments);
+                doc.Add(summaryInfo);
             }
         }
 
@@ -369,18 +382,19 @@ namespace Faktura.Invoices
 
                 Font signatureTemplateFont = new Font(DefaultFontFamily, SignatureTemplateFontSize);
                 Paragraph signatureTemplate = new Paragraph();
+                signatureTemplate.Font = signatureTemplateFont;
                 //Chunk to separte buyer's and issuer's signature templates
                 Chunk separatorChunk = new Chunk(new VerticalPositionMark());
 
                 signatureTemplate.Add(buyerSignatureTemplateStr);
-                signatureTemplate.Add(new Chunk(separatorChunk));
+                signatureTemplate.Add(separatorChunk);
                 signatureTemplate.Add(issuerSingatureTemplateStr);
                 signatureTemplate.Font = signatureTemplateFont;
                 doc.Add(signatureTemplate);
 
                 AddNewLines(NewLinesAfterSignatureStr, doc);
 
-                signatureTemplate = new Paragraph();
+                signatureTemplate.Clear();
                 signatureTemplate.Add(signatureTemplateStr);
                 signatureTemplate.Add(separatorChunk);
                 signatureTemplate.Add(signatureTemplateStr);
@@ -393,10 +407,14 @@ namespace Faktura.Invoices
         {
             if (0 != count && null != pdfDocument)
             {
+                Paragraph newLines = new Paragraph();
+
                 for (int iterator = 0; iterator < count; iterator++)
                 {
-                    pdfDocument.Add(new Paragraph(Environment.NewLine));
+                    newLines.Add(new Paragraph(Environment.NewLine));
                 }
+
+                pdfDocument.Add(newLines);
             }
         }
 
