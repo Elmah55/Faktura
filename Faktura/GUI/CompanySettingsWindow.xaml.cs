@@ -65,7 +65,7 @@ namespace Faktura.GUI
         /// Loads saved company settings from file. Sets preset array to null
         /// if loading .dat file failed
         /// </summary>
-        private Company[] LoadPresets() //TODO: Add loading from file
+        private Company[] LoadPresets()
         {
             Company[] loadedPresets = null;
 
@@ -215,7 +215,7 @@ namespace Faktura.GUI
             if (ParseFailReason.None == reason)
             {
                 newSettings = new Company(TextBoxCompanyName.Text, NIP, REGON, TextBoxAddressStreet.Text,
-                   houseNumber, TextBoxAddressCity.Text, postalCode);
+                   houseNumber, TextBoxAddressCity.Text, postalCode,TextBoxBankAccountNumber.Text);
             }
             else
             {

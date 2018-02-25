@@ -12,22 +12,24 @@
         <Button x:Name="ButtonApply" Content="Zastosuj" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75" Height="30" Click="ButtonApply_Click" Margin="0,0,50,18"/>
         <ComboBox x:Name="ComboBoxCompanySettingsPresets" HorizontalAlignment="Left" Margin="72,70,0,0" VerticalAlignment="Top" Width="450" SelectionChanged="ComboBoxCompaniesPresets_SelectionChanged" SelectedIndex="0"/>
         <Label Content="Firmy" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Margin="72,31,0,0"/>
-        <Label Content="Nazwa firmy" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Margin="72,126,0,0"/>
-        <Label Content="NIP" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Margin="72,195,0,0"/>
-        <Label Content="REGON" HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="18" Margin="0,264,453,0"/>
+        <Label Content="Nazwa firmy" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="72,119,0,0"/>
+        <Label Content="NIP" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="72,175,0,0" RenderTransformOrigin="0.621,0.808"/>
+        <Label Content="REGON" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,231,472,0"/>
         <Label Content="Ulica" HorizontalAlignment="Center" VerticalAlignment="Top" Height="25" Width="95" Margin="72,404,427,0"/>
         <Label Content="Numer domu" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="72,434,427,0" Height="25" Width="95"/>
         <Label Content="Miejscowość" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="72,464,427,0" Height="25" Width="95"/>
         <Label Content="-" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="212,496,351,0" Height="24" Width="31" HorizontalContentAlignment="Center" FontWeight="Bold" RenderTransformOrigin="0.538,1.264" VerticalContentAlignment="Center"/>
         <Label Content="Kod pocztowy" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="72,494,414,0" Height="25" Width="108" RenderTransformOrigin="0.485,1"/>
-        <Label Content="Adres" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="18" Margin="250,348,250,0"/>
-        <TextBox x:Name="TextBoxCompanyName" HorizontalAlignment="Left" Height="25" Margin="72,165,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
-        <TextBox x:Name="TextBoxNIP" HorizontalAlignment="Left" Height="25" Margin="72,234,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
-        <TextBox x:Name="TextBoxREGON" HorizontalAlignment="Left" Height="25" Margin="72,303,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
+        <Label Content="Adres" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="18" Margin="269,355,269,0"/>
+        <TextBox x:Name="TextBoxCompanyName" HorizontalAlignment="Left" Height="25" Margin="72,145,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
+        <TextBox x:Name="TextBoxNIP" HorizontalAlignment="Left" Height="25" Margin="72,201,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
+        <TextBox x:Name="TextBoxREGON" HorizontalAlignment="Left" Height="25" Margin="72,257,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
         <TextBox x:Name="TextBoxAddressStreet" HorizontalAlignment="Left" Height="25" Margin="172,404,0,0" VerticalAlignment="Top" Width="350" MaxLines="1"/>
         <TextBox x:Name="TextBoxAddressHouseNumber" HorizontalAlignment="Left" Height="25" Margin="172,434,0,0" VerticalAlignment="Top" Width="350" MaxLines="1"/>
         <TextBox x:Name="TextBoxAddressPostCode1" HorizontalAlignment="Left" Height="25" Margin="172,495,0,0" VerticalAlignment="Top" Width="35" MaxLines="1"/>
         <TextBox x:Name="TextBoxAddressCity" HorizontalAlignment="Left" Height="25" Margin="172,464,0,0" VerticalAlignment="Top" Width="350" MaxLines="1"/>
         <TextBox x:Name="TextBoxAddressPostCode2" HorizontalAlignment="Left" Height="25" Margin="248,496,0,0" VerticalAlignment="Top" Width="45" MaxLines="1" RenderTransformOrigin="-0.52,0.56"/>
+        <Label Content="Numer konta bankowego" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,287,371,0" Width="150"/>
+        <TextBox x:Name="TextBoxBankAccountNumber" HorizontalAlignment="Left" Height="25" Margin="72,313,0,0" VerticalAlignment="Top" Width="450" MaxLines="1"/>
     </Grid>
 </Window>
