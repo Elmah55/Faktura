@@ -9,11 +9,18 @@ namespace Faktura.Invoices
     class PDFPageEvent : PdfPageEventHelper, IPdfPageEvent
     {
         public event PDFPageEventHandler EndPage;
+        public event PDFPageEventHandler StartPage;
 
         public override void OnEndPage(PdfWriter writer, Document document)
         {
             EndPage?.Invoke(document, writer);
             base.OnEndPage(writer, document);
+        }
+
+        public override void OnStartPage(PdfWriter writer, Document document)
+        {
+            StartPage?.Invoke(document, writer);
+            base.OnStartPage(writer, document);
         }
     }
 

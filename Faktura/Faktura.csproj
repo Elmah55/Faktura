@@ -60,7 +60,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Companies\CompanySettings.cs" />
+    <Compile Include="Companies\Company.cs" />
     <Compile Include="Files\ISerializer.cs" />
     <Compile Include="Files\ObjectSerializer.cs" />
     <Compile Include="GUI\CompanySettingsWindow.xaml.cs">
