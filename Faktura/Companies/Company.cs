@@ -104,23 +104,35 @@ namespace Faktura.Companies
             }
         }
 
-        public Company(string companyName, UInt64 nip, UInt64 regon, string street, UInt16 houseNumber,
-        string city, UInt32 postalCode)
+        private string _BankAccountNumber;
+        public string BankAccountNumber
         {
-            if (null != street && null != companyName && null != city)
+            get
             {
-                this.CompanyName = companyName;
-                this.NIP = nip;
-                this.REGON = regon;
-                this.Street = street;
-                this.HouseNumber = houseNumber;
-                this.City = city;
-                this.PostalCode = postalCode;
+                return _BankAccountNumber;
             }
-            else
+
+            set
             {
-                throw new ArgumentNullException();
+                _BankAccountNumber = value;
             }
+        }
+
+        public Company()
+        {
+        }
+
+        public Company(string companyName, UInt64 nip, UInt64 regon, string street, UInt16 houseNumber,
+        string city, UInt32 postalCode, string bankAccountNumber)
+        {
+            this.CompanyName = companyName;
+            this.NIP = nip;
+            this.REGON = regon;
+            this.Street = street;
+            this.HouseNumber = houseNumber;
+            this.City = city;
+            this.PostalCode = postalCode;
+            this.BankAccountNumber = bankAccountNumber;
         }
     }
 }
