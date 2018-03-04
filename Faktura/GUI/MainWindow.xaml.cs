@@ -127,9 +127,15 @@ namespace Faktura
 
         private void ButtonGenerateInvoice_Click(object sender, RoutedEventArgs e)
         {
-            CompanySettings cmpsts = new CompanySettings("FIRMA", 55555555, 4444444, "Wiertnicza 2", 6, "Szczecin", 32421);
+            Company cmpsts = new Company("FIRMA", 55555555, 4444444, "Wiertnicza 2", 6, "Szczecin", 32421,"444444");
             List<InvoiceItem> invitems = new List<InvoiceItem>();
-            Invoice inv = new Invoice(DateTime.Now, 3, "K/755/33", invitems);
+            Invoice inv = new Invoice(DateTime.Now, 3, "K/755/33", invitems, PaymentType.Card,Currency.PLN,"TEST UWAGI");
+
+            for (int i = 0; i < 1000; i++)
+            {
+                inv.Items.Add(new InvoiceItem("ITEM", (uint)i, 50, "KOMM", 1));
+            }
+
             InvoicePDF.GenerateInvoicePDF(cmpsts, inv, "test.pdf");
         }
 

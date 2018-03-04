@@ -98,15 +98,17 @@ namespace Faktura.Invoices
 
                 if (null != fStream) //Pdf file created successfully
                 {
-                    Document pdfDocument = new Document();
-                    PdfWriter writer = PdfWriter.GetInstance(pdfDocument, fStream);
-                    pdfDocument.Open();
+
+                    Document doc = new Document();
+                    PdfWriter writer = PdfWriter.GetInstance(doc, fStream);
+                    doc.Open();
+                    SetPageEvents(writer);
 
                     SetPageEvents(writer);
-                    FillDocument(company, inv, pdfDocument, writer);
+                    FillDocument(company, inv, doc, writer);
 
-                    pdfDocument.Close();
-                    pdfDocument.Dispose();
+                    doc.Close();
+                    doc.Dispose();
                     fStream.Close();
                     fStream.Dispose();
                     writer.Close();

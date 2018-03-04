@@ -52,6 +52,11 @@ namespace Faktura.Invoices
             }
         }
 
+        public Invoice()
+        {
+
+        }
+
         public Invoice(DateTime issueDate, UInt32 paymentDate, string invoiceNumber, ICollection<InvoiceItem> items
             , PaymentType paymentType, Currency currencyType, string comment = "")
         {
@@ -82,6 +87,8 @@ namespace Faktura.Invoices
 
     public enum Currency
     {
-        PLN
+        PLN,
+        USD,
+        EUR
     }
 }

@@ -9,9 +9,9 @@
         // that there can be only one instance of each window class.
         // Upon accessing window's class properties if any given
         // window has not been created yet it is created first.
-        //Upon closing coresponding window's field is set to null
-        //to avoid exceptions thrown by using window's class with
-        //deallocated resources.
+        // Upon closing coresponding window's field is set to null
+        // to avoid exceptions thrown by using window's class with
+        // deallocated resources.
 
         private static InvoiceSettingsWindow _InvoiceSettingsWin;
         public InvoiceSettingsWindow InvoiceSettingsWin
