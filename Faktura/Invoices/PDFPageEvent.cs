@@ -10,6 +10,8 @@ namespace Faktura.Invoices
     {
         public event PDFPageEventHandler EndPage;
         public event PDFPageEventHandler StartPage;
+        public event PDFPageEventHandler CloseDocument;
+        public event PDFPageEventHandler OpenDocument;
 
         public override void OnEndPage(PdfWriter writer, Document document)
         {
@@ -21,6 +23,18 @@ namespace Faktura.Invoices
         {
             StartPage?.Invoke(document, writer);
             base.OnStartPage(writer, document);
+        }
+
+        public override void OnCloseDocument(PdfWriter writer, Document document)
+        {
+            CloseDocument?.Invoke(document, writer);
+            base.OnCloseDocument(writer, document);
+        }
+
+        public override void OnOpenDocument(PdfWriter writer, Document document)
+        {
+            OpenDocument?.Invoke(document, writer);
+            base.OnOpenDocument(writer, document);
         }
     }
 

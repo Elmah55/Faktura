@@ -11,7 +11,7 @@ namespace Faktura.Invoices
     /// <summary>
     /// This is a class for generating pdf file from invoice object
     /// </summary>
-    class InvoicePDFMaker
+    class InvoicePDFMaker : IInvoicePDFGenerator
     {
         //Consts
         #region
@@ -20,18 +20,35 @@ namespace Faktura.Invoices
         //Fonts types
         //-------------------------------------------------------------------
         private const Font.FontFamily DefaultFontFamily = Font.FontFamily.TIMES_ROMAN;
+        private string DefaultFont = BaseFont.TIMES_ROMAN;
+        private string DefaultFontEncoding = BaseFont.CP1252;
         //-------------------------------------------------------------------
 
         //Fonts sizes
         //-------------------------------------------------------------------
         //Default font used for most text on invoice pdf
-        private const UInt32 DefualtFontSize = 14;
+        private const UInt32 DefaultFontSize = 14;
         private const UInt32 IssuerInfoFontSize = 10;
         //Font size for elements in invoice item's table
         private const UInt32 ItemsTableFontSize = 10;
-        private const UInt32 FooterFontSize = 5;
+        private const UInt32 FooterFontSize = 10;
         private const UInt32 SignatureTemplateFontSize = 7;
         private const UInt32 SummaryInfoFontSize = 10;
+        //-------------------------------------------------------------------
+
+        //Page count footers
+        //-------------------------------------------------------------------
+        private const int PageCountFooterTemplateWidht = 100;
+        private const int PageCountFooterTemplateHeight = 100;
+
+        //Offsets from document center x coordinate
+        private const int PageNumberTemplateTextXOffset = -24;
+        private const int PageCountTemplateTextXOffset = 20;
+        //Offsets from document bottom
+        private const int PageNumberTemplateTextYOffset = 10;
+        private const int PageCountTemplateTextYOffset = PageNumberTemplateTextYOffset;
+        //Offset used  to modify base offset when page number contains more than one digit
+        private const UInt32 PageCountTemplateExtraXOffset = 2;
         //-------------------------------------------------------------------
 
         //New lines spacing
@@ -55,27 +72,31 @@ namespace Faktura.Invoices
         #region
 
         //-------------------------------------------------------------------
-        private PDFPageEvent PageEventHelper;
 
         //Invoice item's table related fields
         private int TableColumsCount;
         private float[] TableColumnsWidth;
-        private PdfPTable InvoiceItemsTable;
 
         //Pdf document fields
+
+        private PdfTemplate PageCountFootersTemplate;
 
         //Total number of all pages in pdf document.
         //This fields is calculated by incrementing
         //it at every page end event
         private UInt32 DocumentPagesCount;
 
+        //Indicates whether next row of invoice item's table
+        //should be columns header row
+        private bool ItemsTableColumnsHeaderRequired;
+
         //-------------------------------------------------------------------
         #endregion
 
         public InvoicePDFMaker()
         {
-            this.PageEventHelper = new PDFPageEvent();
             this.TableColumsCount = InvoiceItem.FieldsName.Length + 1; //One column for item number
+            this.ItemsTableColumnsHeaderRequired = false;
 
             //Init columns width array
             this.TableColumnsWidth = new float[TableColumsCount];
@@ -89,12 +110,15 @@ namespace Faktura.Invoices
             TableColumnsWidth[7] = 0.16f; //Comment
         }
 
+        //PDF document generation related methods
+        #region
+        //-------------------------------------------------------------------
+
         public void GenerateInvoicePDF(Company company, Invoice inv, string pdfFilePath)
         {
             if (null != company && null != inv && null != pdfFilePath)
             {
                 FileStream fStream = CreatePdfFile(pdfFilePath);
-                DocumentPagesCount = 1;
 
                 if (null != fStream) //Pdf file created successfully
                 {
@@ -103,8 +127,12 @@ namespace Faktura.Invoices
                     PdfWriter writer = PdfWriter.GetInstance(doc, fStream);
                     doc.Open();
                     SetPageEvents(writer);
+                    InitPageCountFootersTemplate(writer);
 
-                    SetPageEvents(writer);
+                    //Reset pages count variable
+                    DocumentPagesCount = 1;
+                    ItemsTableColumnsHeaderRequired = true;
+
                     FillDocument(company, inv, doc, writer);
 
                     doc.Close();
@@ -119,33 +147,6 @@ namespace Faktura.Invoices
             {
                 throw new ArgumentNullException();
             }
-        }
-
-        /// <summary>
-        /// Sets writer's events class and
-        /// registers methods to the PageEventHelper class events
-        /// </summary>
-        private void SetPageEvents(PdfWriter writer)
-        {
-            if (null != writer && null != PageEventHelper)
-            {
-                writer.PageEvent = PageEventHelper;
-                PageEventHelper.EndPage += HandlePageEnd;
-                PageEventHelper.StartPage += HandlePageStart;
-            }
-        }
-
-        private void HandlePageStart(Document document, PdfWriter writer)
-        {
-            //if (0 != document.PageNumber && null != InvoiceItemsTable)
-            //{
-            //    AddItemsTableColumnsHeaders(InvoiceItemsTable);
-            //} TODO Add column headers on every page with invoice item's table
-        }
-
-        private void HandlePageEnd(Document document, PdfWriter writer)
-        {
-            ++DocumentPagesCount;
         }
 
         /// <summary>
@@ -184,9 +185,54 @@ namespace Faktura.Invoices
                 AddSummaryInfo(inv, doc);
                 AddNewLines(NewLinesBeforeSignatureTemplate, doc);
                 AddSignatureTemplates(doc);
-                AddPageCountFooters(doc, writer);
             }
         }
+
+        //-------------------------------------------------------------------
+        #endregion
+
+        //PDF document events related methods
+        #region
+        //-------------------------------------------------------------------
+
+        /// <summary>
+        /// Sets writer's events class and
+        /// registers methods to the PageEventHelper class events
+        /// </summary>
+        private void SetPageEvents(PdfWriter writer)
+        {
+            if (null != writer)
+            {
+                PDFPageEvent pageEvent = new PDFPageEvent();
+                writer.PageEvent = pageEvent;
+                pageEvent.EndPage += HandlePageEnd;
+                pageEvent.StartPage += HandlePageStart;
+                pageEvent.CloseDocument += HandleDocumentClose;
+            }
+        }
+
+        private void HandleDocumentClose(Document document, PdfWriter writer)
+        {
+            AddPageCountToFootersTemplate();
+        }
+
+        private void HandlePageStart(Document document, PdfWriter writer)
+        {
+            //if (0 != document.PageNumber && null != InvoiceItemsTable)
+            //{
+            //    AddItemsTableColumnsHeaders(InvoiceItemsTable);
+            //} TODO Add column headers on every page with invoice item's table
+        }
+
+        private void HandlePageEnd(Document document, PdfWriter writer)
+        {
+            ++DocumentPagesCount;
+            AddPageNumberToFootersTemplates(document, writer);
+
+        }
+
+        //-------------------------------------------------------------------
+        #endregion
 
         //Invoice header related methods
         #region
@@ -209,7 +255,7 @@ namespace Faktura.Invoices
             if (null != inv && null != doc)
             {
                 string headerText = "Faktura VAT nr. " + inv.InvoiceNumber;
-                Font invoiceNumberFont = new Font(DefaultFontFamily, DefualtFontSize);
+                Font invoiceNumberFont = new Font(DefaultFontFamily, DefaultFontSize);
                 Paragraph invoiceNumber = new Paragraph(headerText, invoiceNumberFont);
                 invoiceNumber.Alignment = Element.ALIGN_CENTER;
                 doc.Add(invoiceNumber);
@@ -251,21 +297,21 @@ namespace Faktura.Invoices
         {
             if (null != inv && null != doc && 0 != inv.Items.Count)
             {
-                InitInvoiceItemsTable();
-                AddItemsToTable(inv, InvoiceItemsTable);
+                PdfPTable table = InitInvoiceItemsTable();
 
-                if (null != InvoiceItemsTable)
+                if (null != table)
                 {
-                    doc.Add(InvoiceItemsTable);
+                    AddItemsToTable(inv, table);
+                    doc.Add(table);
                 }
             }
         }
 
-        private void InitInvoiceItemsTable()
+        private PdfPTable InitInvoiceItemsTable()
         {
-            InvoiceItemsTable = new PdfPTable(TableColumnsWidth);
-            InvoiceItemsTable.SetTotalWidth(TableColumnsWidth);
-            AddItemsTableColumnsHeaders(InvoiceItemsTable);
+            PdfPTable table = new PdfPTable(TableColumnsWidth);
+            table.SetTotalWidth(TableColumnsWidth);
+            return table;
         }
 
         private void AddItemsTableColumnsHeaders(PdfPTable table)
@@ -293,6 +339,13 @@ namespace Faktura.Invoices
 
                 foreach (InvoiceItem item in inv.Items)
                 {
+
+                    if (ItemsTableColumnsHeaderRequired)
+                    {
+                        AddItemsTableColumnsHeaders(table);
+                        ItemsTableColumnsHeaderRequired = false;
+                    }
+
                     table.AddCell(new PdfPCell(new Phrase(itemNumber.ToString(), tableElementsFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.Name, tableElementsFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.VATRate.ToString(), tableElementsFont)));
@@ -310,42 +363,115 @@ namespace Faktura.Invoices
         //-------------------------------------------------------------------
         #endregion
 
-        //Other pdf document's content related methods
+        //Page count footers related methods
         #region
         //-------------------------------------------------------------------
 
         /// <summary>
-        /// Adds footer to every page containing information about current page number
-        /// as well as count of all pages of pdf document. This method should be called after
-        /// whole pdf document was filled so that total number of pages is known
+        /// Adds template to every page containing information about current page number. 
+        /// On close document event (when total number of document's pages is known)
+        /// one should call method to add total number of document's pages to previously prepared templates.
         /// </summary>
-        private void AddPageCountFooters(Document doc, PdfWriter writer)
+        private void AddPageNumberToFootersTemplates(Document doc, PdfWriter writer)
         {
-            if (null != doc && null != writer)
+            if (null != doc && null != writer && null != PageCountFootersTemplate)
             {
-                //Coordinates for pages count footer
-                const int pageCountFooterX = 550;
-                const int PageCountFooterY = 20;
+                PdfContentByte content = writer.DirectContent;
+                content.SaveState();
 
-                UInt32 currentPageNumber = 1;
-                Font pagesCountFont = new Font(DefaultFontFamily, FooterFontSize);
-                writer.ResetPageCount();
-                writer.DirectContentUnder.Reset();
+                string footerText = "Strona " + DocumentPagesCount + " z ";
+                BaseFont footerFont = BaseFont.CreateFont(DefaultFont, DefaultFontEncoding, true);
+                //Center x coordinate of document
+                float documentCenterX = doc.Right / 2;
+                //This offset is calculated beacuse page count template x coordinate need to be changed
+                //based on number of digits in page number. The bigger the number of digits in page number
+                //is the bigger the page count template x offset should be
+                float pageCountFootersXOffset = CalculatePageCountFootersXOffset();
 
-                for (currentPageNumber = 1; currentPageNumber < DocumentPagesCount; currentPageNumber++)
-                {
-                    string pagesCountStr = "Strona " + currentPageNumber + " z " + DocumentPagesCount;
-                    Phrase pagesCountPhrase = new Phrase(pagesCountStr);
-                    pagesCountPhrase.Font = pagesCountFont;
-
-                    PdfContentByte content = writer.DirectContentUnder;
-                    ColumnText.ShowTextAligned(content, Element.ALIGN_RIGHT,
-                    pagesCountPhrase, pageCountFooterX, PageCountFooterY, 0);
-
-                    ++currentPageNumber;
-                }
+                content.BeginText();
+                content.SetFontAndSize(footerFont, FooterFontSize);
+                content.SetTextMatrix(documentCenterX + PageNumberTemplateTextXOffset, PageNumberTemplateTextYOffset);
+                content.ShowText(footerText);
+                content.EndText();
+                content.AddTemplate(PageCountFootersTemplate, documentCenterX + pageCountFootersXOffset, PageCountTemplateTextYOffset);
+                content.RestoreState();
             }
         }
+
+        /// <summary>
+        /// Calculate page count footers x coordinate offset taking
+        /// number of digits in page number.
+        /// </summary>
+        private float CalculatePageCountFootersXOffset()
+        {
+            float pageCountFootersXOffset;
+            UInt32 pageNumberDigitCount = GetDigitCount((int)DocumentPagesCount);
+
+            if (pageNumberDigitCount > 1)
+            {
+                pageCountFootersXOffset = PageCountTemplateTextXOffset + (int)(PageCountTemplateExtraXOffset * pageNumberDigitCount);
+            }
+            //No need to add extra offset if page number contains only one digit
+            else
+            {
+                pageCountFootersXOffset = PageCountTemplateTextXOffset;
+            }
+
+            return pageCountFootersXOffset;
+        }
+
+        /// <summary>
+        /// Returns number of digits of passed integer
+        /// </summary>
+        private UInt32 GetDigitCount(int number)
+        {
+            UInt32 digitCount = 0;
+
+            while (0 != number)
+            {
+                number = number / 10;
+                ++digitCount;
+            }
+
+            return digitCount;
+        }
+
+        /// <summary>
+        /// Adds total number of pages to previously prepared page count footers.
+        /// This method should be called on document close event.
+        /// </summary>
+        private void AddPageCountToFootersTemplate()
+        {
+            if (null != PageCountFootersTemplate)
+            {
+                BaseFont footerFont = BaseFont.CreateFont(DefaultFont, DefaultFontEncoding, true);
+
+                PageCountFootersTemplate.BeginText();
+                PageCountFootersTemplate.SetFontAndSize(footerFont, FooterFontSize);
+                PageCountFootersTemplate.SetTextMatrix(0, 0);
+                PageCountFootersTemplate.ShowText(DocumentPagesCount.ToString());
+                PageCountFootersTemplate.EndText();
+            }
+        }
+
+        private void InitPageCountFootersTemplate(PdfWriter writer)
+        {
+            if (null != writer)
+            {
+                PageCountFootersTemplate = writer.DirectContent.CreateTemplate(
+                    PageCountFooterTemplateWidht, PageCountFooterTemplateHeight);
+                Rectangle templateBoundingBox = new Rectangle(-20, -20, 100, 100);
+                PageCountFootersTemplate.BoundingBox = templateBoundingBox;
+
+            }
+        }
+
+        //-------------------------------------------------------------------
+        #endregion
+
+        //Other pdf document's content related methods
+        #region
+        //-------------------------------------------------------------------
 
         private void AddSummaryInfo(Invoice inv, Document doc)
         {
@@ -413,7 +539,7 @@ namespace Faktura.Invoices
 
                 for (int iterator = 0; iterator < count; iterator++)
                 {
-                    newLines.Add(new Paragraph(Environment.NewLine));
+                    newLines.Add(Environment.NewLine);
                 }
 
                 pdfDocument.Add(newLines);
